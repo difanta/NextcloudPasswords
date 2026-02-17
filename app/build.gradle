@@ -5,6 +5,7 @@ plugins {
     id 'com.google.devtools.ksp' version "$ksp_version"
     id 'org.jetbrains.kotlin.plugin.serialization' version "$kotlin_version"
     id 'org.jetbrains.kotlin.plugin.compose' version "$kotlin_version"
+    id 'kotlin-parcelize'
 }
 
 java {
