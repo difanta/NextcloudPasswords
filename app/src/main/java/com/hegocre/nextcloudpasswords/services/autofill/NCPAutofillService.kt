@@ -34,6 +34,7 @@ import com.hegocre.nextcloudpasswords.utils.AutofillData
 import com.hegocre.nextcloudpasswords.utils.PasswordAutofillData
 import com.hegocre.nextcloudpasswords.utils.SaveData
 import com.hegocre.nextcloudpasswords.utils.ListDecryptionStateNonNullable
+import com.hegocre.nextcloudpasswords.R
 
 @TargetApi(Build.VERSION_CODES.O)
 class NCPAutofillService : AutofillService() {
