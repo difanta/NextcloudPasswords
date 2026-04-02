@@ -176,15 +176,6 @@ class AssistStructureParser(assistStructure: AssistStructure) {
         this?.htmlInfo?.attributes?.firstOrNull { it.first.lowercase() == attr && it.second.lowercase() == value } != null
 
     /**
-     * Retrieve a HTML attribute value from  a view node.
-     *
-     * @param attr The attribute to retrieve.
-     * @return The retrieved attribute value, or null if not found.
-     */
-    private fun AssistStructure.ViewNode?.getAttribute(attr: String): String? =
-        this?.htmlInfo?.attributes?.firstOrNull { it.first.lowercase() == attr }?.second
-
-    /**
      * Check if a text field matches the [InputType.TYPE_CLASS_TEXT] input type.
      *
      * @return Whether the field matches the input type.
