@@ -197,7 +197,7 @@ fun NCPNavHost(
                                     isRefreshing = isRefreshing,
                                     onRefresh = { passwordsViewModel.sync() },
                                 ) {
-                                    if (filteredPasswordList == null || filteredPasswordList.isEmpty() == true) {
+                                    if (filteredPasswordList.isNullOrEmpty()) {
                                         if (searchQuery.isBlank()) NoContentText() else NoResultsText()
                                     } else if (replyAutofill != null) {
                                         // Reply to the autofill right away without showing any UI
@@ -234,7 +234,7 @@ fun NCPNavHost(
                                     isRefreshing = isRefreshing,
                                     onRefresh = { passwordsViewModel.sync() },
                                 ) {
-                                    if (filteredPasswordList == null || filteredPasswordList.isEmpty() == true) {
+                                    if (filteredPasswordList.isNullOrEmpty()) {
                                         // TODO: open automatically a new password or the only updatable password if isSave
                                         //if (sessionOpen && autofillData != null && autofillData.isSave())
                                         //    navController.navigate("${NCPScreen.PasswordEdit.name}/")
