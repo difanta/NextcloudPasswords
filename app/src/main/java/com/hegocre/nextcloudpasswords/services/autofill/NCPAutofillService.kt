@@ -221,7 +221,7 @@ class NCPAutofillService : AutofillService() {
                 builder.addDataset(
                         AutofillHelper.buildDataset(
                             applicationContext,
-                            PasswordAutofillData(label = "Create new password", id = null, username = null, password = null), // TODO: translation
+                            PasswordAutofillData(label = applicationContext.getString(R.string.new_password), id = null, username = null, password = null),
                             helper,
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) inlineRequest?.inlinePresentationSpecs?.first() else null,
                             AutofillHelper.buildIntent(applicationContext, 1002, AutofillData.SaveAutofill(searchHint, saveData, helper.structure)),
@@ -237,7 +237,7 @@ class NCPAutofillService : AutofillService() {
         builder.addDataset(
             AutofillHelper.buildDataset(
                 applicationContext,
-                PasswordAutofillData(label = "More", id = null, username = null, password = null), // TODO translation
+                PasswordAutofillData(label = applicationContext.getString(R.string.more), id = null, username = null, password = null),
                 helper,
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) inlineRequest?.inlinePresentationSpecs?.first() else null,
                 AutofillHelper.buildIntent(applicationContext, 1003, AutofillData.ChoosePwd(searchHint, helper.structure)),
