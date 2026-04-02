@@ -28,6 +28,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.concurrent.CancellationException
 import android.content.IntentSender
 import com.hegocre.nextcloudpasswords.utils.AutofillData
@@ -54,23 +55,31 @@ class NCPAutofillService : AutofillService() {
     val strictUrlMatching by lazy { preferencesManager.getUseStrictUrlMatching() }
 
     private lateinit var decryptedPasswordsState: StateFlow<ListDecryptionStateNonNullable<Password>>
+
+    private var loginException: Throwable? = null
     
     override fun onCreate() {
         super.onCreate()
-        decryptedPasswordsState = combine(
-            passwordController.getPasswords().asFlow(),
-            apiController.csEv1Keychain.asFlow()
-        ) { passwords, keychain ->
-            passwords.decryptPasswords(keychain).let { decryptedPasswords ->
-                ListDecryptionStateNonNullable(decryptedPasswords, false, decryptedPasswords.size < passwords.size)
+
+        try {
+            decryptedPasswordsState = combine(
+                passwordController.getPasswords().asFlow(),
+                apiController.csEv1Keychain.asFlow()
+            ) { passwords, keychain ->
+                passwords.decryptPasswords(keychain).let { decryptedPasswords ->
+                    ListDecryptionStateNonNullable(decryptedPasswords, false, decryptedPasswords.size < passwords.size)
+                }
             }
+            .flowOn(Dispatchers.Default)
+            .stateIn(
+                scope = serviceScope, 
+                started = SharingStarted.Lazily, 
+                initialValue = ListDecryptionStateNonNullable(isLoading = true)
+            )
+        } catch(e: Throwable) {
+            loginException = e
+            decryptedPasswordsState = MutableStateFlow(ListDecryptionStateNonNullable(isLoading = false))
         }
-        .flowOn(Dispatchers.Default)
-        .stateIn(
-            scope = serviceScope, 
-            started = SharingStarted.Lazily, 
-            initialValue = ListDecryptionStateNonNullable(isLoading = true)
-        )
     }
 
     override fun onDestroy() {
@@ -93,7 +102,7 @@ class NCPAutofillService : AutofillService() {
                 else callback.onFailure("Could not complete fill request")
             } catch (e: CancellationException) {
                 throw e 
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 callback.onFailure("Error handling fill request: ${e.message}")
             }
         }
@@ -104,6 +113,10 @@ class NCPAutofillService : AutofillService() {
     }
 
     private suspend fun processFillRequest(request: FillRequest): FillResponse? {
+        loginException?.let { 
+            throw it 
+        }
+
         Log.d(TAG, "Processing fill request")
         val context = request.fillContexts.last() ?: return null
         val helper = AssistStructureParser(context.structure)
@@ -116,32 +129,15 @@ class NCPAutofillService : AutofillService() {
             return null
         }
 
-        // TODO: when to sync with server?
-        // Check Login Status
-        //try {
-        //    userController.getServer()
-        //} catch (_: UserException) {
-        //    Log.e(TAG, "User not logged in, cannot autofill")
-        //    return null
-        //}
-
-        //Log.d(TAG, "User is logged in")
-
-        // Try to open Session
-        //if (!apiController.sessionOpen.value && !passwordController.openSession(preferencesManager.getMasterPassword())) {
-        //    Log.w(TAG, "Session is not open and cannot be opened")
-        //}
-        //Log.d(TAG, "Session is open")
-
         // Determine Search Hint
         val searchHint = helper.webDomain ?: getAppLabel(helper.packageName)
 
         Log.d(TAG, "Search hint determined: $searchHint")
 
         // wait for passwords to be decrypted, then filter by search hint and sort them
-        decryptedPasswordsState.first { !it.isLoading }
+        val currentState = decryptedPasswordsState.first { !it.isLoading }
 
-        val filteredList = decryptedPasswordsState.value.decryptedList.filter {
+        val filteredList = currentState.decryptedList.filter {
             !it.hidden && !it.trashed && it.matches(searchHint, strictUrlMatching.first())
         }.let { list ->
             when (orderBy.first()) {
@@ -153,7 +149,7 @@ class NCPAutofillService : AutofillService() {
         }
 
         // must go to the main app only if there are no passwords to show, and some were not decrypted
-        val needsAppForMasterPassword = if (filteredList.size == 0) decryptedPasswordsState.value.notAllDecrypted
+        val needsAppForMasterPassword = if (filteredList.isEmpty()) currentState.notAllDecrypted
                                         else false
 
         Log.d(TAG, "Passwords filtered and sorted")
@@ -288,7 +284,7 @@ class NCPAutofillService : AutofillService() {
                     else callback.onFailure("Unable to complete Save Request")
                 } catch (e: CancellationException) {
                     throw e 
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     callback.onFailure("Error handling save request: ${e.message}")
                 }
             }
@@ -310,19 +306,19 @@ class NCPAutofillService : AutofillService() {
         val password: String = helper.passwordAutofillContent.firstOrNull { !it.isNullOrBlank() } ?: ""
 
         if (password.isBlank()) {
-            throw Exception("Blank password, cannot save")
+            throw IllegalArgumentException("Blank password, cannot save")
         }
 
         // Check Login Status
         try {
             userController.getServer()
         } catch (_: UserException) {
-            throw Exception("User not logged in, cannot save")
+            throw IllegalStateException("User not logged in, cannot save")
         }
 
         // Ensure Session is open
         if (!apiController.sessionOpen.value && !apiController.openSession(preferencesManager.getMasterPassword())) {
-            throw Exception("Session is not open and cannot be opened, cannot save")
+            throw IllegalStateException("Session is not open and cannot be opened, cannot save")
         }
 
         // Determine Search Hint
