@@ -71,20 +71,20 @@ object AutofillHelper {
 
         Log.d(NCPAutofillService.TAG, "Required IDs: $requiredIds, Optional IDs: $optionalIds")
 
-        val type = if (!helper.usernameAutofillIds.isEmpty()) {
+        val type = if (helper.usernameAutofillIds.isNotEmpty()) {
             SaveInfo.SAVE_DATA_TYPE_USERNAME or SaveInfo.SAVE_DATA_TYPE_PASSWORD
         } else {
             SaveInfo.SAVE_DATA_TYPE_PASSWORD
         } 
 
-        val builder = if (!requiredIds.isEmpty()) {
+        val builder = if (requiredIds.isNotEmpty()) {
             SaveInfo.Builder(type, requiredIds.toTypedArray())
         } else {
             SaveInfo.Builder(type)
         }
 
         // if there are only username views but no password views, then delay the save on supported devices
-        if(!helper.usernameAutofillIds.isEmpty() && helper.passwordAutofillIds.isEmpty() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if(helper.usernameAutofillIds.isNotEmpty() && helper.passwordAutofillIds.isEmpty() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             Log.d(NCPAutofillService.TAG, "Delaying save because only username views are detected")
             return Pair(
                 builder.apply {
@@ -94,11 +94,11 @@ object AutofillHelper {
                     putCharSequence(USERNAME, helper.usernameAutofillContent.firstOrNull() ?: "")
                 }
             )
-        } else if (!helper.passwordAutofillIds.isEmpty()) {
+        } else if (helper.passwordAutofillIds.isNotEmpty()) {
             return Pair(
                 builder.apply {
                     setFlags(SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE)
-                    if (!optionalIds.isEmpty()) setOptionalIds(optionalIds.toTypedArray())
+                    if (optionalIds.isNotEmpty()) setOptionalIds(optionalIds.toTypedArray())
                 }.build(), 
                 null
             )
