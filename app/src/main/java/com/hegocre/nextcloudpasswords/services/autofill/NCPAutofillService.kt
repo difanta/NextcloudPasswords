@@ -55,8 +55,6 @@ class NCPAutofillService : AutofillService() {
 
     private lateinit var decryptedPasswordsState: StateFlow<ListDecryptionStateNonNullable<Password>>
     
-    private val passwordsDecrypted = MutableStateFlow(false)
-
     override fun onCreate() {
         super.onCreate()
         decryptedPasswordsState = combine(
@@ -158,9 +156,9 @@ class NCPAutofillService : AutofillService() {
         val needsAppForMasterPassword = if (filteredList.size == 0) decryptedPasswordsState.value.notAllDecrypted
                                         else false
 
-        Log.d(TAG, "Passwords filtered and sorted, count: ${filteredList.size}, needs input for master password: $needsAppForMasterPassword")
+        Log.d(TAG, "Passwords filtered and sorted")
 
-        val needsAuth = hasAppLock.first() && (isLocked.firstOrNull() ?: true)
+        val needsAuth = hasAppLock.first() && isLocked.value
 
         return buildFillResponse(
             filteredList,
@@ -180,7 +178,7 @@ class NCPAutofillService : AutofillService() {
         needsAuth: Boolean,
         needsAppForMasterPassword: Boolean
     ): FillResponse {
-        Log.d(TAG, "Building FillResponse with ${passwords.size} passwords, needsAuth: $needsAuth")
+        Log.d(TAG, "Building FillResponse, needsAuth: $needsAuth")
         val builder = FillResponse.Builder()
         val useInline = preferencesManager.getUseInlineAutofill()
         
