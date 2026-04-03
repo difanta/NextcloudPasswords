@@ -129,6 +129,13 @@ class NCPAutofillService : AutofillService() {
             return null
         }
 
+        // Check Login Status
+        try {
+            userController.getServer()
+        } catch (_: UserException) {
+            throw IllegalStateException("User not logged in, cannot autofill")
+        }
+
         // Determine Search Hint
         val searchHint = helper.webDomain ?: getAppLabel(helper.packageName)
 
