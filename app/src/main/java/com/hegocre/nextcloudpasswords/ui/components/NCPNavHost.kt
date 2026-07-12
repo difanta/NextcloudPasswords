@@ -245,7 +245,7 @@ fun NCPNavHost(
                                             passwords = filteredPasswordList,
                                             onPasswordClick = onPasswordClick,
                                             onPasswordLongClick = {
-                                                if (sessionOpen && (autofillData == null || autofillData.isSave()) && it.editable)
+                                                if (sessionOpen && it.editable)
                                                     navController.navigate("${NCPScreen.PasswordEdit.name}/${it.id}")
                                             },
                                             getPainterForUrl = { passwordsViewModel.getPainterForUrl(url = it) }
@@ -287,7 +287,7 @@ fun NCPNavHost(
                                             passwords = filteredFavoritePasswords,
                                             onPasswordClick = onPasswordClick,
                                             onPasswordLongClick = {
-                                                if (sessionOpen && (autofillData == null || autofillData.isSave()) && it.editable)
+                                                if (sessionOpen && it.editable)
                                                     navController.navigate("${NCPScreen.PasswordEdit.name}/${it.id}")
                                             },
                                             getPainterForUrl = { passwordsViewModel.getPainterForUrl(url = it) }
@@ -349,12 +349,12 @@ fun NCPNavHost(
                                             folderPasswordCounts = folderPasswordCounts,
                                             onPasswordClick = onPasswordClick,
                                             onPasswordLongClick = {
-                                                if (sessionOpen && (autofillData == null || autofillData.isSave()) && it.editable)
+                                                if (sessionOpen && it.editable)
                                                     navController.navigate("${NCPScreen.PasswordEdit.name}/${it.id}")
                                             },
                                             onFolderClick = onFolderClick,
                                             onFolderLongClick = {
-                                                if (sessionOpen && (autofillData == null || autofillData.isSave()))
+                                                if (sessionOpen)
                                                     navController.navigate("${NCPScreen.FolderEdit.name}/${it.id}")
                                             },
                                             getPainterForUrl = { passwordsViewModel.getPainterForUrl(url = it) }
@@ -431,12 +431,12 @@ fun NCPNavHost(
                                             folderPasswordCounts = folderPasswordCounts,
                                             onPasswordClick = onPasswordClick,
                                             onPasswordLongClick = {
-                                                if (sessionOpen && (autofillData == null || autofillData.isSave()) && it.editable)
+                                                if (sessionOpen && it.editable)
                                                     navController.navigate("${NCPScreen.PasswordEdit.name}/${it.id}")
                                             },
                                             onFolderClick = onFolderClick,
                                             onFolderLongClick = {
-                                                if (sessionOpen && (autofillData == null || autofillData.isSave()))
+                                                if (sessionOpen)
                                                     navController.navigate("${NCPScreen.FolderEdit.name}/${it.id}")
                                             },
                                             getPainterForUrl = { passwordsViewModel.getPainterForUrl(url = it) }
