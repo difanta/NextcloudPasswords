@@ -13,11 +13,11 @@ import com.hegocre.nextcloudpasswords.BuildConfig
 /**
  * Parser used to get the needed information from an assist structure to reply to an Autofill request.
  *
- * @param assistStructure The assist structure provided by the Autofill Request, containing all autofill
- * fields information
+ * @param assistStructures The list assist structures provided by the Autofill Request, containing all autofill
+ * fields information, the list must be non-empty
  */
 @RequiresApi(Build.VERSION_CODES.O)
-class AssistStructureParser(assistStructure: AssistStructure) {
+class AssistStructureParser(assistStructures: List<AssistStructure>) {
     val usernameAutofillIds = mutableListOf<AutofillId>()
     val passwordAutofillIds = mutableListOf<AutofillId>()
     val usernameAutofillContent = mutableListOf<String?>()
@@ -25,12 +25,12 @@ class AssistStructureParser(assistStructure: AssistStructure) {
     private var lastTextAutofillId: AutofillId? = null
     private var lastTextAutofillContent: String? = null
     private var candidateTextAutofillId: AutofillId? = null
-
-    val structure = assistStructure
+    
+    val structures = assistStructures
 
     private val webDomains = HashMap<String, Int>()
 
-    val packageName = assistStructure.activityComponent.flattenToShortString().substringBefore("/")
+    val packageName = assistStructures.last().activityComponent.flattenToShortString().substringBefore("/")
 
     // Get the most repeated domain on the fields (there may be more than one)
     val webDomain: String?
@@ -38,9 +38,12 @@ class AssistStructureParser(assistStructure: AssistStructure) {
             .maxByOrNull { (_, value) -> value }?.first
 
     init {
-        for (i in 0 until assistStructure.windowNodeCount) {
-            val windowNode = assistStructure.getWindowNodeAt(i)
-            windowNode.rootViewNode?.let { parseNode(it) }
+        // parse the structures from the most recent one
+        assistStructures.reversed().forEach { assistStructure ->
+            for (i in 0 until assistStructure.windowNodeCount) {
+                val windowNode = assistStructure.getWindowNodeAt(i)
+                windowNode.rootViewNode?.let { parseNode(it) }
+            }
         }
         if (usernameAutofillIds.isEmpty())
             candidateTextAutofillId?.let {
