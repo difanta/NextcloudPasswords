@@ -147,7 +147,7 @@ class NCPAutofillService : AutofillService() {
         // Do not autofill this application
         if (helper.packageName == packageName) return null
 
-        if (helper.usernameAutofillIds.isEmpty() && helper.passwordAutofillIds.isEmpty()) {
+        if (helper.usernameAutofillData.isEmpty() && helper.passwordAutofillData.isEmpty()) {
             Log.e(TAG, "No username or password fields detected, cannot autofill")
             return null
         }
