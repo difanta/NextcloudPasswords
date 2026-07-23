@@ -18,13 +18,10 @@ import com.hegocre.nextcloudpasswords.BuildConfig
  */
 @RequiresApi(Build.VERSION_CODES.O)
 class AssistStructureParser(assistStructures: List<AssistStructure>) {
-    val usernameAutofillIds = mutableListOf<AutofillId>()
-    val passwordAutofillIds = mutableListOf<AutofillId>()
-    val usernameAutofillContent = mutableListOf<String?>()
-    val passwordAutofillContent = mutableListOf<String?>()
-    private var lastTextAutofillId: AutofillId? = null
-    private var lastTextAutofillContent: String? = null
-    private var candidateTextAutofillId: AutofillId? = null
+    val usernameAutofillData = mutableListOf<Pair<AutofillId, String?>>()
+    val passwordAutofillData = mutableListOf<Pair<AutofillId, String?>>()
+    private var lastTextAutofillData: Pair<AutofillId, String?>? = null
+    private var candidateTextAutofillData: Pair<AutofillId, String?>? = null
     
     val structures = assistStructures
 
@@ -37,6 +34,18 @@ class AssistStructureParser(assistStructures: List<AssistStructure>) {
         get() = webDomains.toList().filter { it.first != "localhost" }
             .maxByOrNull { (_, value) -> value }?.first
 
+    val usernameAutofillIds: List<AutofillId>
+        get() = usernameAutofillData.map { it.first }
+
+    val passwordAutofillIds: List<AutofillId>
+        get() = passwordAutofillData.map { it.first }
+
+    val usernameAutofillContent: List<String?>
+        get() = usernameAutofillData.map { it.second }
+
+    val passwordAutofillContent: List<String?>
+        get() = passwordAutofillData.map { it.second }
+
     init {
         // parse the structures from the most recent one
         assistStructures.reversed().forEach { assistStructure ->
@@ -45,10 +54,9 @@ class AssistStructureParser(assistStructures: List<AssistStructure>) {
                 windowNode.rootViewNode?.let { parseNode(it) }
             }
         }
-        if (usernameAutofillIds.isEmpty())
-            candidateTextAutofillId?.let {
-                usernameAutofillIds.add(it)
-                usernameAutofillContent.add(lastTextAutofillContent)
+        if (usernameAutofillData.isEmpty())
+            candidateTextAutofillData?.let {
+                usernameAutofillData.add(it)
             }
     }
 
@@ -63,19 +71,20 @@ class AssistStructureParser(assistStructures: List<AssistStructure>) {
             if (fieldType != null) {
                 when (fieldType) {
                     FIELD_TYPE_USERNAME -> {
-                        usernameAutofillIds.add(autofillId)
-                        usernameAutofillContent.add(node.text.toString())
+                        if (!usernameAutofillIds.contains(autofillId)) {
+                            usernameAutofillData.add(Pair(autofillId, node.autofillValue?.textValue.toString()))
+                        }
                     }
                     FIELD_TYPE_PASSWORD -> {
-                        passwordAutofillIds.add(autofillId)
-                        passwordAutofillContent.add(node.text.toString())
-                        // We save the autofillId of the field above the password field,
-                        // in case we don't find any explicit username field
-                        candidateTextAutofillId = lastTextAutofillId
+                        if (!passwordAutofillIds.contains(autofillId)) {
+                            passwordAutofillData.add(Pair(autofillId, node.autofillValue?.textValue.toString()))
+                            // We save the autofillId of the field above the password field,
+                            // in case we don't find any explicit username field
+                            candidateTextAutofillData = lastTextAutofillData
+                        }
                     }
                     FIELD_TYPE_TEXT -> {
-                        lastTextAutofillId = autofillId
-                        lastTextAutofillContent = node.text.toString()
+                        lastTextAutofillData = Pair(autofillId, node.autofillValue?.textValue.toString())
                     }
                 }
             }
